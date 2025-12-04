@@ -2,12 +2,13 @@ variable "ecs_config" {
   description = "ECS variables to change"
 
   type = object({
-    cluster_name   = string
-    fargate_weight = string
+    cluster_name               = string
+    cloud_watch_log_group_name = string
+    fargate_weight             = string
   })
   default = {
-    name           = "dev"
-    network_prefix = "10.0"
+    cluster_name               = "dev"
+    cloud_watch_log_group_name = "/aws/ecs/aws-ec2"
   }
 }
 
@@ -27,6 +28,8 @@ variable "ecs_services" {
   }
 
 }
-variable "ecs_image" {
+variable "paymentserv_image" {
+  default = ""
+
 
 }
