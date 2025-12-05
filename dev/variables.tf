@@ -12,6 +12,8 @@ variable "ecs_config" {
   }
 }
 
+
+
 variable "ecs_services" {
   type = object({
     cpu       = number
@@ -28,8 +30,42 @@ variable "ecs_services" {
   }
 
 }
+variable "portMappings" {
+  type = object({
+
+    containerport = number
+    protocol      = string
+
+
+  })
+
+  default = {
+    containerport = 80
+    protocol      = "tcp"
+  }
+
+
+
+
+}
 variable "paymentserv_image" {
   default = ""
+
+
+}
+
+variable "environment" {
+  description = "Deployment environment"
+
+  type = object({
+    name           = string
+    network_prefix = string
+    availzones     = list()
+  })
+  default = {
+    name           = "dev"
+    network_prefix = "10.0"
+  }
 
 
 }
