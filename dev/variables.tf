@@ -69,3 +69,16 @@ variable "environment" {
 
 
 }
+variable "repo_name" {
+  type = object({
+    processor1 = string
+    processor2 = string
+    processor3 = string
+  })
+  default = {
+    processor1 = "processing-repo-stage1"
+    processor2 = "processing-repo-stage2"
+    processor3 = "processing-repo-stage3"
+  }
+
+}

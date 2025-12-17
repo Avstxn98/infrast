@@ -1,28 +1,10 @@
-module "vpc" {
-  source = "terraform-aws-modules/vpc/aws"
+/*
+module "ecs" {
+  source = "terraform-aws-modules/ecs/aws"
 
-  name = var.environment.name
-  cidr = "${var.environment.network_prefix}.0.0/16"
+  cluster_name = "ecs-integrated"
 
-  azs            = ["eu-west-2a", "us-west-2b", "us-west-2c"]
-  public_subnets = ["${var.environment.network_prefix}.101.0/24", "${var.environment.network_prefix}.102.0/24", "${var.environment.network_prefix}.103.0/24"]
-
-
-  enable_nat_gateway = true
-  enable_vpn_gateway = true
-
-  tags = {
-    Terraform   = "true"
-    Environment = "${var.environment.name}"
-  }
-}
-
-module "ecs_cluster" {
-  source = "terraform-aws-modules/ecs/aws//modules/cluster"
-
-  name = "ecs-fargate"
-
-  configuration = {
+  cluster_configuration = {
     execute_command_configuration = {
       logging = "OVERRIDE"
       log_configuration = {
@@ -31,6 +13,7 @@ module "ecs_cluster" {
     }
   }
 
+
   default_capacity_provider_strategy = {
     FARGATE = {
       weight = 50
@@ -38,7 +21,27 @@ module "ecs_cluster" {
     }
     FARGATE_SPOT = {
       weight = 50
+  } }
+  services = {
+
+    payment_cluster = {
+
+      cpu    = 1
+      memory = 1
+
+      container_definitions = {
+        {module.ecs_container_definition.name}
+
+
+
+
+
+      }
+
+
     }
+
+
   }
 
   tags = {
@@ -47,17 +50,17 @@ module "ecs_cluster" {
   }
 }
 
-module "ecs_container_definition" {
+"module "ecs_container_definition" {
   source = "terraform-aws-modules/ecs/aws//modules/container-definition"
 
-  name      = "example"
+  name      = "payment-processor"
   cpu       = 512
   memory    = 1024
   essential = true
   image     = "public.ecr.aws/aws-containers/ecsdemo-frontend:776fd50"
   portMappings = [
     {
-      name          = "ecs-sample"
+      name          = "payment-processor"
       containerPort = 80
       protocol      = "tcp"
     }
@@ -71,5 +74,88 @@ module "ecs_container_definition" {
   tags = {
     Environment = "dev"
     Terraform   = "true"
+  }"
+}
+
+*/
+
+
+resource "aws_ecr_repository" "processing_repo_stage1" {
+  name = var.repo_name.processor1
+
+
+  tags = {
+    Name = "${var.environment.name}"
+  }
+}
+
+resource "aws_ecr_repository" "processing_repo_stage1" {
+  name = var.repo_name.processor1
+
+
+  tags = {
+    Name = "${var.environment.name}"
+  }
+}
+
+
+resource "aws_ecs_task_definition" "my_first_task" {
+  family                   = "processing-tasks"
+  container_definitions    = <<DEFINITION
+[
+  {
+    "name": "task-stage1",
+    "image": "${aws_ecr_repository.processing_repo_stage1.repository_url}",
+    "essential": true,
+    "portMappings": [
+      {
+        "containerPort": 80,
+        "hostPort": 80
+      }
+    ],
+    "memory": 512,
+    "cpu": 256,
+    "networkMode": "awsvpc"
+  },{
+  "name": "task-stage2",
+    "image": "${aws_ecr_repository.my_first_ecr_repo.repository_url}",
+    "essential": true,
+    "portMappings": [
+      {
+        "containerPort": 80,
+        "hostPort": 80
+      }
+    ],
+    "memory": 512,
+    "cpu": 256,
+    "networkMode": "awsvpc"
+  }
+]
+  DEFINITION
+  requires_compatibilities = ["FARGATE"]
+  network_mode             = "awsvpc"
+  memory                   = 512
+  execution_role_arn       = aws_iam_role.ecsTaskExecutionRole.arn
+  cpu                      = 256
+}
+
+
+resource "aws_ecs_cluster" "my_cluster" {
+  name = "my-ecs-cluster"
+}
+
+
+
+resource "aws_ecs_service" "my_first_services" {
+  name                = "gft-test-first-services"
+  cluster             = aws_ecs_cluster.my_cluster.id
+  task_definition     = my_first_task.arn
+  launch_type         = "FARGATE"
+  scheduling_strategy = "REPLICA"
+  desired_count       = 1
+
+  network_configuration {
+    subnets          = [aws_default_subnet.ecs_az1.id]
+    assign_public_ip = false
   }
 }
