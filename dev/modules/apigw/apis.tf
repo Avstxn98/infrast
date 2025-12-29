@@ -26,5 +26,5 @@ resource "aws_api_gateway_integration" "proxy_integration" {
   type                    = "HTTP_PROXY"
   integration_http_method = "ANY"
 
-  uri = "http://${aws_lb.nlb.dns_name}/{proxy}"
+  uri = "http://${module.aws_lb.nlb.dns_name}/{proxy}"
 }
