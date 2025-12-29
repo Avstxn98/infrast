@@ -112,7 +112,12 @@ resource "aws_ecs_task_definition" "my_first_task" {
         "containerPort": 80,
         "hostPort": 80
       }
-    ],
+    ],environment = [
+        {
+          name  = "KAFKA_BOOTSTRAP_SERVERS"
+          value = module.msk.bootstrap_brokers_tls
+        }
+      ],
     "memory": 512,
     "cpu": 256,
     "networkMode": "awsvpc"
@@ -125,7 +130,12 @@ resource "aws_ecs_task_definition" "my_first_task" {
         "containerPort": 80,
         "hostPort": 80
       }
-    ],
+    ],environment = [
+        {
+          name  = "KAFKA_BOOTSTRAP_SERVERS"
+          value = module.msk.bootstrap_brokers_tls
+        }
+      ],
     "memory": 512,
     "cpu": 256,
     "networkMode": "awsvpc"
