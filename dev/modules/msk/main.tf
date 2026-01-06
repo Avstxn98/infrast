@@ -1,14 +1,17 @@
-module "msk" {
-  source  = "terraform-aws-modules/msk-kafka-cluster/aws"
-  version = "x.y.z"
+resource "aws_msk_serverless_cluster" "msk_serverless" {
+  cluster_name = "payment-msk-serverless"
 
-  name                   = "example-msk"
-  kafka_version          = "3.5.1"
-  number_of_broker_nodes = 3
+  client_authentication {
+    sasl {
+      iam {
+        enabled = true
+      }
+    }
+  }
 
-  broker_node_client_subnets = ["subnet-AAA", "subnet-BBB", "subnet-CCC"]
-  broker_node_security_groups = [aws_security_group.msk_sg.id]
+  vpc_config {
+    subnet_ids = module.vpc.private_subnets
 
-  encryption_in_transit_client_broker = "TLS"
-  encryption_in_transit_in_cluster    = true
+  }
 }
+
